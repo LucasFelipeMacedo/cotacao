@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap Style -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <!-- Jquery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+    <!-- Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>-->
+    <!-- Personal JS
+    <script type="text/javascript" src="/js/script.js"></script>
+    <script type="text/javascript" src="/js/xhttp.js"></script>
+    <script type="text/javascript" src="/js/control.js"></script>
+    <script type="text/javascript" src="/js/order.js"></script>-->
+</head>
+
+<body>
+    <!--Alerta de operação bem sucedida-->
+    <div class="alert alert-success" style="display:none" role="alert" id="alerta_sucesso">
+        <h4 class="alert-heading">Enviado com sucesso!</h4>
+        <p>Agora basta aguardar! A empresa entrará em contato com você caso a sua proposta seja aprovada!</p>
+    </div>
+    <!--Formulário-->
+    <div id="tela_cotacao" style="padding: 2%;">
+        <h1 class="text-center">COTAÇÃO DE COMPRA</h1>
+        <div class="form-row">
+            <div class="form-group col-sm-1">
+                <label for="txtcodigo" class="visually-hidden">Código</label>
+                <input type="text" class="form-control" id="txtcodigo" value="" readonly>
+            </div>
+            <div class="form-group col-sm-5">
+                <label for="txtparceiro" class="visually-hidden">Parceiro</label>
+                <input type="text" class="form-control" id="txtparceiro" value="" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label for="txtdata_criacao" class="visually-hidden">Data Criação</label>
+                <!--<input type="text" readonly class="form-control-plaintext" id="txtdata_criacao" value="email@example.com">-->
+                <input type="text" class="form-control" id="txtdata_criacao" value="" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtcriador" class="visually-hidden">Solicitante</label>
+                <input type="text" class="form-control" id="txtcriadro" value="" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtstatus" class="visually-hidden">Situação</label>
+                <input type="text" class="form-control" id="txtstatus" value="" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtdata_fechamento" class="visually-hidden">Data de Fechamento</label>
+                <input type="text" class="form-control" id="txtdata_fechamento" value="" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtprazo_entrega" class="visually-hidden">Prazo de Entrega</label>
+                <input type="text" class="form-control" id="txtprazo_entrega" value="">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtnumero_orcamento" class="visually-hidden">Número do Orçamento</label>
+                <input type="text" class="form-control" id="txtnumero_orcamento" value="">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="txtobservacao_fornecedor" class="visually-hidden">Observação para o Fornecedor</label>
+                <textarea class="form-control" id="txtobservacao_fornecedor" rows="3" readonly></textarea>
+            </div>
+        </div>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Cód</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Qtd</th>
+                    <th scope="col">Unid</th>
+                    <th scope="col">Vlr Unitário</th>
+                    <th scope="col">Vlr Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">1</th>
+                    <td>1300</td>
+                    <td>BEB. LÁCTEA UHT CHOCOMILK GARRAFA 200ML - BATAVO</td>
+                    <td>100</td>
+                    <td>UN</td>
+                    <td><input type="text" class="form-control" id="txtvlr_unit_1" value="0,00"></td>
+                    <td><input type="text" class="form-control" id="txtvlr_total_1" value="0,00" readonly></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label for="txtvalor_total_itens" class="visually-hidden">Valor total dos Itens</label>
+                <input type="text" class="form-control" id="txtvalor_total_itens" value="0,00" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtdesconto" class="visually-hidden">Desconto</label>
+                <input type="text" class="form-control" id="txtdesconto" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txticms" class="visually-hidden">ICMS</label>
+                <input type="text" class="form-control" id="txticms" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtipi" class="visually-hidden">IPI</label>
+                <input type="text" class="form-control" id="txtipi" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtpis" class="visually-hidden">PIS</label>
+                <input type="text" class="form-control" id="txtpis" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtcofins" class="visually-hidden">Cofins</label>
+                <input type="text" class="form-control" id="txtcofins" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtfrete" class="visually-hidden">Frete</label>
+                <input type="text" class="form-control" id="txtfrete" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtvalor_total" class="visually-hidden">Valor Total</label>
+                <input type="text" class="form-control" id="txtvalor_total" value="0,00" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="txtobservacao_empresa" class="visually-hidden">Observações para a empresa</label>
+                <textarea class="form-control" id="txtobservacao_empresa" rows="3" placeholder="Ex: Nome do vendedor, telefone celular, informações sobre os produtos..."></textarea>
+            </div>
+        </div>
+        <!--Alerta de operação mal sucedida-->
+        <div class="alert alert-danger" style="display:none" role="alert" id="alerta_erro">
+            Não foi possivel finalizar o envio da cotação, por favor verifique os dados informados ou faça mais tarde
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button class="btn btn-primary btn-lg" type="button" id="btnenviar">Enviar</button>
+        </div>
+    </div>
+
+</body>
+<script src="js/cotacao.js">
+</script>
+<script src="js/callcotacao.js">
+</script>
+
+</html>

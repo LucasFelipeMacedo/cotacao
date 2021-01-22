@@ -1,0 +1,1 @@
+window.cotacao = new cotacao;
