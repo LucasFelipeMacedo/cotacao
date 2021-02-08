@@ -97,13 +97,14 @@ class cotacao {
         this.alertsucess = document.querySelector('#alerta_sucesso');
         this.alerterror = document.querySelector('#alerta_erro');
 
-        this.screen = document.querySelector('#tela_cotacao');
+        this.screen = document.querySelector('#form');
 
         this.eventListener();
     }
 
     eventListener() {
-        let allElements = document.querySelectorAll('.form-control');
+
+        let allElements = document.querySelectorAll('.calc');
 
         allElements.forEach(element => {
             element.addEventListener('blur', e => {
@@ -112,21 +113,47 @@ class cotacao {
         });
 
         this.enviar.addEventListener('click', e => {
-            this.error();
+            this.send();
         });
 
     }
 
     calc(e) {
 
+        let qtdElements = document.querySelectorAll('.table-qtd');
+        let vlr_unitElements = document.querySelectorAll('.table-vlr-unit');
+        let vlr_totalElements = document.querySelectorAll('.table-vlr-total');
+
+        //Zera o valor total dos itens antes do calculo 
+        this.valor_total_itens.value = 0;
+
+        //Calcular a qtd x o valor unitário
+        for (let i = 0; i < qtdElements.length; i++) {
+            vlr_totalElements[i].value = this.cnum(qtdElements[i].value) * this.cnum(vlr_unitElements[i].value);
+            vlr_totalElements[i].value = vlr_totalElements[i].value / 100;
+            //console.log(vlr_totalElements[i].value);
+            vlr_totalElements[i].value = this.fnum(vlr_totalElements[i].value, 2);
+        }
+        var total = 0;
+
+        //Calcular o valor total dos itens
+        for (let i = 0; i < vlr_totalElements.length; i++) {
+            total += this.cnum(vlr_totalElements[i].value);
+            this.valor_total_itens.value = total;
+        }
+
+        this.valor_total_itens.value = this.fnum(this.valor_total_itens.value);
+
         //Calcular valor total
         this.valor_total.value = this.cnum(this.valor_total_itens.value) - this.cnum(this.desconto.value) + this.cnum(this.icms.value) + this.cnum(this.ipi.value) + this.cnum(this.pis.value) + this.cnum(this.cofins.value) + this.cnum(this.frete.value);
         this.valor_total.value = this.fnum(this.valor_total.value, 2);
         e.value = this.cnum(e.value);
         e.value = this.fnum(e.value, 2);
+
     }
 
     cnum(value) {
+        //Retira virgulas e pontos para o calculo
         if (typeof value != 'undefined') {
             let a = value.replace(',', '.');
             a = parseInt(a * 100);
@@ -137,17 +164,16 @@ class cotacao {
     }
 
     fnum(value, decimal_places = 2, dot = ",") {
+        //Configura as casas decimais
         let negative = '';
 
         if (this.left(value, 1) == '-') {
             value = this.right(value, value.length - 1);
             negative = '-';
         }
-        // console.log(value);
 
         if (value.length <= decimal_places) {
             let q = decimal_places - value.length + 1;
-            //console.log("q", q);
             for (let i = 0; i < q; i++) {
                 value = "0" + value.toString();
             }
@@ -168,14 +194,33 @@ class cotacao {
         return value.substring(0, caractNum);
     }
 
-    error() {
-        this.alerterror.style.display = "block";
-    }
+    send() {
+        var current_form = document.querySelectorAll('.form-control');
+        var form = new FormData();
 
-    success() {
-        this.alertsucess.style.display = "block";
-        this.screen.style.display = "none";
-    }
+        var path = window.location.toString().split('?');
+        var chave = path[1];
 
+        form.append('key', chave.replace('key=', ''));
+
+        for (let i = 0; i < current_form.length; i++) {
+            form.append(current_form[i].id, current_form[i].value);
+        }
+
+        xmlHttpPost('php/save.php', function() {
+            success(function() {
+                console.log(xhttp.responseText);
+                if (xhttp.responseText == 'Send with success.') {
+                    document.querySelector('#alerta_sucesso').style.display = "block";
+                    document.querySelector('#form').style.display = "none";
+                } else {
+                    document.querySelector('#alerta_erro').style.display = "block";
+                }
+            });
+            error(function() {
+                alert('Error: Not was possible save this register.');
+            });
+        }, form);
+    }
 
 }

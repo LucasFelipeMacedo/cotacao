@@ -1,547 +1,213 @@
-class form {
-    constructor() {
-        this._response = '';
-        this._title = '';
-        this._id = '';
-        this.initialize();
-        this._cSearchType = '';
-        this._cSearchFilter = '';
-        this._cSearchItems = '';
+<?php
+    session_start();
+    require ('php/connect.php');
+
+    $db = new db\connect();
+    $conn = $db->open();
+
+    //Carregar variaveis
+    $key = '';
+
+    $_SESSION['_token'] = hash("sha512",rand(100,1000));
+
+    if (isset($_GET["key"])){
+        $key = $_GET["key"];
+    }else{
+        echo "Invalid quote.";
+        exit;
     }
 
-    set reponse(a) {
-        this._reponse = a;
-    }
+    //Remover sql injection
+    $key = mysqli_real_escape_string($conn,$key);
+    
+    //Puxar dados da capa
+    $sql = "SELECT * FROM tbcotacao WHERE chave = '$key'";
+    $result = mysqli_query($conn,$sql) or die(mysqli_error($conn));
+    $column = mysqli_fetch_assoc($result);
+    $status = htmlspecialchars($column['status']);
+    $codigo = htmlspecialchars($column['codigo']);
+    $parceiro = htmlspecialchars($column['parceiro']);
+    $data_criacao = htmlspecialchars($column['data_criacao']);
+    $criador = htmlspecialchars($column['criador']);
+    $status = htmlspecialchars($column['status']);
+    $data_fechamento = htmlspecialchars($column['data_fechamento']);
+    $observacao_fornecedor = htmlspecialchars($column['observacao_fornecedor']);
+    $valor_total_itens = htmlspecialchars($column['valor_total_itens']);
+    $desconto = htmlspecialchars($column['desconto']);
+    $icms = htmlspecialchars($column['icms']);
+    $ipi = htmlspecialchars($column['ipi']);
+    $pis = htmlspecialchars($column['pis']);
+    $cofins = htmlspecialchars($column['cofins']);
+    $frete = htmlspecialchars($column['frete']);
+    $valor_total = htmlspecialchars($column['valor_total']);
+    $observacao_empresa = htmlspecialchars($column['observacao_empresa']);
 
-    get reponse() {
-        return this._reponse;
-    }
+?>
 
-    set title(a) {
-        this._title = a;
-    }
+<!DOCTYPE html>
+<html>
 
-    get title() {
-        return this._title;
-    }
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap Style -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- Jquery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+    <!-- Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+</head>
 
-
-    set id(a) {
-        this._id = a;
-    }
-
-    get id() {
-        return this._id;
-    }
-
-    set cSearchType(a) {
-        this._cSearchType = a;
-    }
-
-    get cSearchType() {
-        return this._cSearchType;
-    }
-
-    set cSearchFilter(a) {
-        this._cSearchFilter = a;
-    }
-
-    get cSearchFilter() {
-        return this._cSearchFilter;
-    }
-
-    set cSearchItems(a) {
-        this._cSearchItems = a;
-    }
-
-    get cSearchItems() {
-        return this._cSearchItems;
-    }
-
-    initialize() {
-        this.reponse = xhttp.responseText;
-        this.addcontrol();
-        this.eventListener();
-        this.maskEventListener();
-    }
-
-    addcontrol() {
-
-        let jsonFormulario = JSON.parse(this.reponse).formulario;
-        let jsonObjetos = JSON.parse(this.reponse).objetos;
-        let formData = '';
-        let lastLine = 0;
-        let currentLine = 0;
-
-        var path = window.location.toString().split('/');
-        this.title = path[4];
-
-        jsonObjetos.forEach(element => {
-            currentLine = element.linha;
-
-            //Verifica qual é a linha do formulário que esta sendo apresentada
-            if (currentLine != lastLine) {
-                //se é diferente e linha anterior igual a 0 significa que é a primeira execução
-                if (lastLine == 0) {
-                    formData += '<div class="form-row">';
-                } else {
-                    formData += `</div>
-					        <div class="form-row">`;
-                }
-            }
-
-            formData += this.createObject(element);
-
-            lastLine = currentLine;
-        });
-
-        this.createModal(jsonFormulario.titulo, formData);
-    }
-
-    createObject(json) {
-
-        let enable = json.ativado;
-        let format = json.formato;
-        let name = json.nome;
-        let required = json.obrigatorio;
-        let label = json.rotulo;
-        let size = json.tamanho;
-        let type = json.tipo;
-        let value = json.valor;
-        let itens = json.itens;
-        let mask = json.mascara;
-        let codname = json.codigo_nome;
-        let codvalue = json.codigo_valor;
-        let searchType = json.busca_tipo;
-        let searchField = json.busca_campos;
-        let searchFilter = json.busca_filtro;
-
-        let htmValue = '';
-
-        if (value == null) {
-            value = '';
-        } else if (value == '[HOJE]') {
-            let cDate = new Date;
-            value = currentDate('yyyy-mm-dd');
-            htmValue = `value="${value}"`;
-        } else {
-            htmValue = `value="${value}"`;
+<body>
+    <!--Alerta de operação bem sucedida-->
+    <?php
+        if ($status == 'Finalizado'){
+            echo '<div class="alert alert-success" role="alert" id="alerta_sucesso">'
+                    .'<h4 class="alert-heading">Proposta enviada com sucesso!</h4>'
+                    .'<p>Agora basta aguardar! A empresa entrará em contato com você caso a sua proposta seja aprovada!</p>'
+                .'</div>';
+            exit;
+        }elseif($status == 'Aberto'){
+            echo '<div class="alert alert-success" style="display:none" role="alert" id="alerta_sucesso">'
+                    .'<h4 class="alert-heading">Proposta enviada com sucesso!</h4>'
+                    .'<p>Agora basta aguardar! A empresa entrará em contato com você caso a sua proposta seja aprovada!</p>'
+                .'</div>';
+        }elseif($status == ''){
+            echo 'Registro não localizado';
+            exit;
         }
-
-        let htmCodValue = '';
-
-        if (codvalue == null) {
-            codvalue = '';
-        } else {
-            htmCodValue = `value="${codvalue}"`;
-        }
-
-        if (required == 'Sim') {
-            required = 'Required';
-        } else {
-            required = '';
-        }
-
-        if (itens == null) { itens = ''; }
-        if (mask == null) { mask = ''; }
-
-        if (searchFilter == null) { searchFilter = ''; }
-
-        //Substitui no filtro a aspas simples para não gerar problemas no HTML
-        if (searchFilter != null) { searchFilter = searchFilter.replace(/'/g, "@"); }
-
-        let html = '';
-
-        switch (type.toLowerCase()) {
-            case "textbox":
-                let htmFormat = '';
-                let htmEnable = '';
-                let htmMask = '';
-
-                if (format == 'Double') {
-                    htmFormat = 'type="number" step="0.01"';
-                } else if (format == 'Número') {
-                    htmFormat = 'type="number" step="1"';
-                } else if (format == 'Data') {
-                    htmFormat = 'type="Date"';
-                } else {
-                    htmFormat = 'type="text"';
-                }
-
-                if (mask != '') {
-                    htmMask = `placeholder="${mask}"`;
-                }
-
-                if (enable == 'Não') {
-                    htmEnable = 'readonly="readonly"';
-                }
-
-                //if ($this->getVisible()===false) {
-                //	$visible = ' style="visibility: hidden;position:absolute;"';
-                //}
-
-                html = `<div class = "form-group col-md-${size}">
-                            <label for = "${name}"> ${label}</label> 
-                                <input ${htmFormat} name = "${name}" class="form-control" id="${name}" ${htmValue} ${htmMask} ${htmEnable} autocomplete="off" ${required}>
-                        </div>
-                        `;
-
-                break;
-            case "combobox":
-
-                html += `<div class="form-group col-md-${size}">
-                             <label for="${name}">${label}</label>
-                             <select id="${name}" name="${name}" class="form-control">`;
-
-                //Se tem uma string fonte não executa a query
-                if (itens != '') {
-                    //console.log(itens);
-                    let cmbitens = itens.split(',');
-
-                    for (let i = 0; i < cmbitens.length; i++) {
-                        if (value == cmbitens[i]) {
-                            html += `<option selected>${cmbitens[i]}</option>`;
-                        } else {
-                            html += `<option>${cmbitens[i]}</option>`;
-                        }
-                    }
-
-                }
-                html += `</select>
-                    </div>`;
-
-                break;
-            case "button":
-                html = `<button type="button" id = "${name}" class="btn btn-dark">${label}</button>`;
-                break;
-            case "search":
-                html = `<div class = "form-group col-md-${size}">
-                            <label for = "${name}">${label}</label> 
-                            <div class="input-group-prepend">
-                                <input type="text" class="" name = "${codname}" class="form-control" id="${codname}" onblur="window.form.leaveSearch('${codname}','${name}')" ${htmCodValue} autocomplete="off" ${required}>
-                                <button type="button" id = "${codname}_search" class="btn btn-primary" onclick="window.form.createSearch('${searchType}','${searchFilter}',items = ${searchField})"><i class="material-icons">search</i></button>
-                            </div>
-                            <input type="text" name = "${name}" class="form-control" id="${name}" readonly="readonly" ${htmValue} autocomplete="off" ${required}>
-                        </div>
-                        `;
-                break;
-            default:
-        }
-        return html;
-    }
-
-    createModal(title, form, save_cancel = true, searchModal = '') {
-
-        //verifica se já existe uma modal uma moda criada e exclui
-        if ((searchModal == '') && (document.querySelector('.modal') !== null)) {
-            document.querySelector('.modal').remove();
-        }
-
-        let html = `
-        <div class="modal fade bd-example-modal-xl" tabindex="-1" role="dialog" id="modal${searchModal}">
-            <div class="modal-dialog modal-xl">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">${title}</h5>
-                  <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>-->
-                </div>
-                <div class="modal-body">
-                    <form method = "POST" id = "form" role = "form" enctype="multipart/form-data">
-                            ${form}
-                    </form>
-                </div>`;
-        if (save_cancel) {
-            html += `<div class="modal-footer">
-                        <button type="button" class="btn btn-primary" name="btnsalvar" id="btnsalvar">Salvar</button>
-                        <button type="button" class="btn btn-danger" data-dismiss="modal${searchModal}" name="btncancelar" id="btncancelar">Cancelar</button>
-                    </div>`;
-        }
-        html += `</div>
+    ?>
+    <!--Formulário-->
+    <form id="form" style="padding: 2%;">
+        <input type="hidden" class="form-control" value = "<?php echo $_SESSION['_token']; ?>" id="_token">
+        <h1 class="text-center">COTAÇÃO DE COMPRA</h1>
+        <div class="form-row">
+            <div class="form-group col-sm-1">
+                <label for="txtcodigo" class="visually-hidden">Código</label>
+                <input type="text" class="form-control" id="txtcodigo" value="<?= $codigo ?>" readonly>
             </div>
-          </div>`;
-
-        $("body").append(html); //Incluir o modal no body
-        $('.modal').modal(); //Abrir o modal
-
-    }
-
-    leaveSearch(codname, name) {
-        if (document.querySelector("#" + codname).value == '') {
-            document.querySelector("#" + name).value = '';
-        }
-    }
-
-    createSearch(type, filter, items) {
-        //Volta as aspas para enviar a requisição
-        if (filter != null) { filter = filter.replace(/@/g, "'"); }
-
-        xmlHttpGet('/cmd/search/parametros?', function() {
-            success(function() {
-                window.form.addTable(items);
-            });
-            error(function() {
-
-            });
-        }, 'type=' + type + '&q=' + filter);
-
-    }
-
-    addTable(items, operation = '') {
-        //Muda a resposta
-        this.reponse = xhttp.responseText;
-        let jsonTable = JSON.parse(this.reponse).tabela;
-        let tbody;
-        let htm = '';
-
-        let items_array = '';
-
-        items.forEach(x => {
-            if (items_array == '') {
-                items_array += "['" + x[0] + "','" + x[1] + "']";
-            } else {
-                items_array += ",['" + x[0] + "','" + x[1] + "']";
-            }
-        });
-
-        items_array = '[' + items_array + ']';
-
-        if (operation == 'update') {
-            //Apaga todas as linhas
-            document.querySelector('tbody').remove();
-            //Criar um novo tbody
-            tbody = document.createx('tbody');
-        } else {
-            //Abre a chave tabela
-            htm += `<div style = "padding: 20px">
-                    <div class="table-responsive">`;
-
-            if (jsonTable.modo_escuro == false) {
-                htm += '<table class="table table-hover">'; //Normal
-            } else {
-                htm += '<table class="table table-dark">'; //Dark
-            }
-
-            //Sempre inicia com o ID
-            let columns_title = `<th scope="col"></th>`;
-
-            jsonTable.colunas.forEach(element => {
-                columns_title += `<th scope="col">${element}</th>`;
-            });
-
-            //Adiciona os titulos das colunas
-            htm += `<thead>
-                    <tr>${columns_title}</tr>
-                </thead>
-                <tbody>`;
-        }
-
-        //Percorrer todas as colunas
-        let col = [];
-
-        for (var value in jsonTable.dados[0]) {
-            col.push(value);
-        }
-
-        //Percorrer todas as linhas
-        for (var i = 0; i < jsonTable.dados.length; i++) {
-            //Adiciona o checkbox
-            htm += '<tr>';
-
-            for (var j = 0; j < col.length; j++) {
-                let value = jsonTable.dados[i][col[j]];
-
-                //Limpar valor
-                if (value == null || value == '*NOTHING*') { value = '' };
-
-                switch (col[j].toLowerCase()) {
-                    case 'id':
-                        //Cria o radio com o valor do id
-                        htm += `<tr>
-                                            <td>
-                                                <input class="fdorm-check-input modal-table" type="radio" name="id" id="${value}" value="${value}">
-                                            </td>
-                                            <td style = "font-size: 12px">${value}</td>`;
-                        break;
-                    case 'status':
-                        let statusColor = '';
-
-                        if (value.toLowerCase() == 'aberto' || value.toLowerCase() == 'em aberto') {
-                            statusColor = 'primary';
-                        } else if (value.toLowerCase() == 'aprovado' || value.toLowerCase() == 'pago' || value.toLowerCase() == 'baixado' || value.toLowerCase() == 'faturado' || value.toLowerCase() == 'ativo') {
-                            statusColor = 'success';
-                        } else if (value.toLowerCase() == 'andamento' || value.toLowerCase() == 'pago com cheque') {
-                            statusColor = 'warning';
-                        } else if (value.toLowerCase() == 'cancelado') {
-                            statusColor = 'light';
-                        } else {
-                            statusColor = 'danger';
-                        }
-                        //Cria status personalizado
-                        htm += `<td style = "font-size: 12px"><span class="badge badge-${statusColor}">${value}</span></td>`;
-                        break;
-                    default:
-                        //Cria o campo padrão
-                        htm += `<td style = "font-size: 12px">${value}</td>`;
-                        break;
-                }
-            }
-        }
-
-        htm += '</tr>';
-
-        htm += `    </tbody>
-                    </table>
-                </div>
-            </div>`;
-        let form = '';
-
-        //Cria o campo de busca
-        form = `<div class="form-row">
-                    <div class = "form-group col-md-10"> 
-                        <input type = '' name = "txtsearch" class="form-control" id="txtsearch" autocomplete="off" placeholder="Procurar">
-                    </div>
-                    <button type="button" id = "btnsearch" class="btn btn-dark" data-dismiss="modal_search" onclick="window.form.searchID(items = ${items_array})">Selecionar</button>
-                </div>
-                    ${htm}`;
-
-        this.createModal(jsonTable.titulo, form, false, '_search');
-        this.searchEventListener();
-    }
-
-    searchID(items = []) {
-
-        var elements = document.querySelectorAll(".modal-table");
-        let jsonTable = JSON.parse(this.reponse).tabela;
-
-        for (var i = 0; i < elements.length; i++) {
-            if (elements[i].checked == true) {
-                for (var k = 0; k < jsonTable.dados.length; k++) {
-                    if (jsonTable.dados[k].id == elements[i].id) {
-
-                        //Carregar valores nos campos
-                        items.forEach(x => {
-                            document.querySelector('#' + x[0]).value = jsonTable.dados[k][x[1]];
-                        });
-
-                        this.removeModal('_search');
-                        return false;
+            <div class="form-group col-sm-5">
+                <label for="txtparceiro" class="visually-hidden">Parceiro</label>
+                <input type="text" class="form-control" id="txtparceiro" value="<?= $parceiro ?>" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label for="txtdata_criacao" class="visually-hidden">Data Criação</label>
+                <!--<input type="text" readonly class="form-control-plaintext" id="txtdata_criacao" value="email@example.com">-->
+                <input type="text" class="form-control" id="txtdata_criacao" value="<?= $data_criacao ?>" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtcriador" class="visually-hidden">Solicitante</label>
+                <input type="text" class="form-control" id="txtcriador" value="<?= $criador ?>" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtstatus" class="visually-hidden">Situação</label>
+                <input type="text" class="form-control" id="txtstatus" value="<?= $status ?>" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtdata_fechamento" class="visually-hidden">Data de Fechamento</label>
+                <input type="text" class="form-control" id="txtdata_fechamento" value="<?= $data_fechamento ?>" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtprazo_entrega" class="visually-hidden">Prazo de Entrega</label>
+                <input type="text" class="form-control" id="txtprazo_entrega" value="">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtnumero_orcamento" class="visually-hidden">Número do Orçamento</label>
+                <input type="text" class="form-control" id="txtnumero_orcamento" value="">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="txtobservacao_fornecedor" class="visually-hidden">Observação para o Fornecedor</label>
+                <textarea class="form-control" id="txtobservacao_fornecedor" rows="3" readonly><?= $observacao_fornecedor ?></textarea>
+            </div>
+        </div>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Cód</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Qtd</th>
+                    <th scope="col">Unid</th>
+                    <th scope="col">Vlr Unitário</th>
+                    <th scope="col">Vlr Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                    $sql = "SELECT * FROM tbprodutos WHERE chave = '$key'";
+                    $result = mysqli_query($conn,$sql);
+                    
+                    while($row = mysqli_fetch_assoc($result)){  
+                        //Carregar linhas da tabela
+                        echo '<tr>'
+                        .'<th scope="row">'.$row['id'].'</th>'
+                        .'<td>'.$row['codigo'].'</td>'
+                        .'<td>'.$row['produto'].'</td>'
+                        .'<td><input type="text" class="form-control calc table-qtd" id="txtqtd_'.$row['id'].'" value="'.$row['quantidade'].'" readonly></td>'
+                        .'<td>'.$row['unidade'].'</td>'
+                        .'<td><input type="text" class="form-control calc table-vlr-unit" id="txtvlr_unit_'.$row['id'].'" value="0,00"></td>'
+                        .'<td><input type="text" class="form-control calc table-vlr-total" id="txtvlr_total_'.$row['id'].'" value="0,00" readonly></td>'
+                        .'</tr>';
                     }
-                }
-            }
-        }
-        alert('Nenhum registro foi selecionado!');
-    }
+                ?>
+            </tbody>
+        </table>
+        <div class="form-row">
+            <div class="form-group col-sm-2">
+                <label for="txtvalor_total_itens" class="visually-hidden">Valor total dos Itens</label>
+                <input type="text" class="form-control calc" id="txtvalor_total_itens" value="0,00" readonly>
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtdesconto" class="visually-hidden">Desconto</label>
+                <input type="text" class="form-control calc" id="txtdesconto" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txticms" class="visually-hidden">ICMS</label>
+                <input type="text" class="form-control calc" id="txticms" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtipi" class="visually-hidden">IPI</label>
+                <input type="text" class="form-control calc" id="txtipi" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtpis" class="visually-hidden">PIS</label>
+                <input type="text" class="form-control calc" id="txtpis" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtcofins" class="visually-hidden">Cofins</label>
+                <input type="text" class="form-control calc" id="txtcofins" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtfrete" class="visually-hidden">Frete</label>
+                <input type="text" class="form-control calc" id="txtfrete" value="0,00">
+            </div>
+            <div class="form-group col-sm-2">
+                <label for="txtvalor_total" class="visually-hidden">Valor Total</label>
+                <input type="text" class="form-control calc" id="txtvalor_total" value="0,00" readonly>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="txtobservacao_empresa" class="visually-hidden">Observações para a empresa</label>
+                <textarea class="form-control" id="txtobservacao_empresa" rows="3" placeholder="Ex: Nome do vendedor, telefone celular, informações sobre os produtos..."></textarea>
+            </div>
+        </div>
+        <!--Alerta de operação mal sucedida-->
+        <div class="alert alert-danger" style="display:none" role="alert" id="alerta_erro">
+            Não foi possivel finalizar o envio da cotação, por favor verifique os dados informados ou faça mais tarde
+        </div>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button class="btn btn-primary btn-lg" type="button" id="btnenviar">Enviar</button>
+        </div>
+        <hr>
+        <p>Desenvolvido por <mark>Magnus Sistemas</mark>.</p>
+    </form>
 
-    eventListener() {
-        let btnsalvar = document.querySelector('#btnsalvar');
-        let btncancelar = document.querySelector('#btncancelar');
-
-        btnsalvar.addEventListener('click', e => {
-            if (this.validObject()) {
-                this.save(this.id, this.title);
-            }
-        });
-
-        btncancelar.addEventListener('click', e => {
-            this.cancel();
-        });
-    }
-
-    searchEventListener() {
-        //Ao clicar na linha marcar a radiobox
-        let row = document.querySelector('#modal_search').querySelector('tbody').querySelectorAll('tr');
-        row.forEach(element => {
-            element.addEventListener('click', e => {
-                element.querySelector('.fdorm-check-input').checked = true;
-            });
-        });
-        //Alterar o ponteiro do mouse
-        row.forEach(element => {
-            addEventListenerAll(element, 'mouseover mouseup mousedown', e => {
-                element.style.cursor = "pointer";
-            });
-        });
-        //Ao digitar mais de 3 letras no campo procurar ativar o modo busca
-        let txtsearch = document.querySelector('#txtsearch');
-        txtsearch.addEventListener('change', e => {
-            if (txtsearch.value.lenght > 2) {
-
-            }
-        });
-
-    }
-
-    maskEventListener() {
-
-        let object = document.querySelectorAll('.form-control');
-
-        object.forEach(element => {
-            if (element.placeholder != '') {
-                var mask = element.placeholder;
-                element.addEventListener('keydown', e => {
-                    element.value = maskFormat(element.value, mask);
-                });
-            }
-        });
-
-    }
-
-    cancel() {
-        this.removeModal();
-        console.log('passou aqui ->cancel');
-    }
-
-    save(id, title) {
-        var current_form = document.querySelector('#form');
-        var form = new FormData(current_form);
-        form.append('id', id);
-        form.append('title', title);
-
-        xmlHttpPost('/cmd/salvar-formulario', function() {
-            success(function() {
-                if (xhttp.responseText != 'Error') {
-                    window.location.reload();
-                } else {
-                    alert(xhttp.responseText);
-                }
-            });
-            error(function() {
-                alert('Não foi possivel salvar, este registro.');
-            });
-        }, form);
-
-    }
-
-    removeModal(searchModal = '') {
-        let mod = document.getElementById('modal' + searchModal);
-
-        mod.remove();
-
-        //Fechar todos os modalbackdrop fundo escuro
-        if (searchModal == '') {
-            console.log('passou aqui console log');
-            let bk = document.querySelectorAll('.modal-backdrop');
-
-            bk.forEach(element => {
-                element.remove();
-            });
-        }
-    }
-
-    validObject() {
-        let objects = document.querySelectorAll('.form-control');
-        let valid = true;
-
-        objects.forEach(element => {
-            if (element.required == true && element.value == '') {
-                alert('O campo ' + right(element.name, element.name.lenght - 3) + ' é obrigatório!');
-                valid = false;
-            }
-        });
-
-        return valid;
-    }
-
-}
+</body>
+<script src="js/util.js"></script>
+<script src="js/cotacao.js"></script>
+<script src="js/callcotacao.js"></script>
+</html>
