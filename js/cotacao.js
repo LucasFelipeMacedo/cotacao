@@ -197,7 +197,7 @@ class cotacao {
     send() {
         var current_form = document.querySelectorAll('.form-control');
         var form = new FormData();
-
+        var loader = document.querySelector('.loader');
         var path = window.location.toString().split('?');
         var chave = path[1];
 
@@ -206,6 +206,9 @@ class cotacao {
         for (let i = 0; i < current_form.length; i++) {
             form.append(current_form[i].id, current_form[i].value);
         }
+
+        loader.style.display = "";
+        this.enviar.style.display = "none";
 
         xmlHttpPost('php/save.php', function() {
             success(function() {
@@ -216,9 +219,13 @@ class cotacao {
                 } else {
                     document.querySelector('#alerta_erro').style.display = "block";
                 }
+                loader.style.display = "none";
+                this.enviar.style.display = "";
             });
             error(function() {
                 alert('Error: Not was possible save this register.');
+                loader.style.display = "none";
+                this.enviar.style.display = "";
             });
         }, form);
     }

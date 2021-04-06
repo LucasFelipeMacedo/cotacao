@@ -52,6 +52,7 @@ $observacao_empresa = htmlspecialchars($column['observacao_empresa']);
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Bootstrap Style -->
 <link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/loader.css">
 <!-- Jquery -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
 <!-- Popper -->
@@ -202,7 +203,9 @@ $observacao_empresa = htmlspecialchars($column['observacao_empresa']);
     </div>
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <button class="btn btn-primary btn-lg" type="button" id="btnenviar">Enviar</button>
+        <div class="loader" style="display:none"></div>
     </div>
+    
     <hr>
     <p>Desenvolvido por <mark>Magnus Sistemas</mark>.</p>
 </form>
