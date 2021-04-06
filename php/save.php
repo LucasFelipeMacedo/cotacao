@@ -1,6 +1,11 @@
 <?php
     session_start();
     require ('connect.php');
+    require_once('credential.php');
+    require_once('../vendor/autoload.php');
+
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\SMTP;
 
     function right($valor,$numero_caracteres){
         return substr($valor,strlen($valor)-$numero_caracteres,strlen($valor));
@@ -96,9 +101,59 @@
         }
         
         $sql = "UPDATE tbcotacao SET $columns_header,status='Finalizado' WHERE $where_header";
-        
+    
         if ($conn->query($sql) === TRUE) {
             echo "Send with success.";
+
+            //Enviar o email
+            //Valida se a chave já existe, se sim, exclui todos e adiciona o novo JSON
+            $sql = "SELECT email_resposta,codigo,parceiro FROM tbcotacao WHERE $where_header";
+            $result = mysqli_query($conn,$sql) or die(mysqli_error($conn));
+            $return = mysqli_fetch_assoc($result);
+            
+            if ($return['email_resposta'] == ''){
+                exit;
+            }
+            
+            //Create a new PHPMailer instance
+            $mail = new PHPMailer();
+            //Tell PHPMailer to use SMTP
+            $mail->isSMTP();
+            //Enable SMTP debugging
+            //SMTP::DEBUG_OFF = off (for production use)
+            //SMTP::DEBUG_CLIENT = client messages
+            //SMTP::DEBUG_SERVER = client and server messages
+            $mail->SMTPDebug = SMTP::DEBUG_OFF;
+            //Set the hostname of the mail server
+            $mail->Host = MAILHOST;
+            $mail->Port = 587;
+            $mail->SMTPAuth = true;
+            $mail->Username = MAILNAME;
+            $mail->Password = MAILPASS;
+            //Set who the message is to be sent from
+            $mail->setFrom(MAILNAME, 'Cotacao');
+            //Set an alternative reply-to address
+            //$mail->addReplyTo('replyto@example.com', 'First Last');
+            //Set who the message is to be sent to
+            $mail->addAddress($return['email_resposta'], $return['parceiro']);
+            //Set the subject line
+            $mail->Subject = 'COTACAO RESPONDIDA';
+            //Read an HTML message body from an external file, convert referenced images to embedded,
+            //convert HTML into a basic plain-text alternative body
+            //$mail->Body = 'O fornecedor '.$return['parceiro'].' respondeu sua cotação.';
+            $mail->msgHTML('O fornecedor '.$return['parceiro'].' respondeu sua cotação.');
+            //Replace the plain text body with one created manually
+            $mail->AltBody = 'O fornecedor '.$return['parceiro'].' respondeu sua cotação.';
+            //Attach an image file
+            //$mail->addAttachment('images/phpmailer_mini.png');
+
+            //send the message, check for errors
+            if (!$mail->send()) {
+                //echo 'Mailer Error: ' . $mail->ErrorInfo;
+            } else {
+                //echo 'Message sent!';
+            }
+            
         } else {
             echo "Error updating record: " . $conn->error;
             exit;

@@ -48,22 +48,39 @@
     $json = '';
 
     if(isset($_POST['json'])){
-        $json = json_decode($_POST['json']);
+        $json = json_decode($_POST['json'],true);
     }else{
         echo "Error invalid value.";
         exit;
     }
 
-    //$json = json_decode($json);
-
     $header_columns = '';
     $header_values = '';
     $items_columns = '';
     $items_values = '';
-    $sql_items = [];
-    $json_key = '';
+    //$sql_items = [];
+    $json_key = $json['chave'];
+    //$json_produtos = '';
 
-    $json_produtos = '';
+    //Valida se a chave já existe, se sim, exclui todos e adiciona o novo JSON
+    $sql = "SELECT COUNT(id) as valor FROM tbcotacao WHERE chave = '$json_key'";
+    $result = mysqli_query($conn,$sql) or die(mysqli_error($conn));
+    $return = mysqli_fetch_assoc($result);
+
+    if($return['valor'] > 0){
+        //Excluir a cotação anterior
+        $sql = "DELETE FROM tbprodutos WHERE chave = '$json_key'";
+        if ($conn->query($sql) === FALSE) {
+            echo "Error delete products: " . $conn->error;
+        }
+
+        $sql = "DELETE FROM tbcotacao WHERE chave = '$json_key'";
+        if ($conn->query($sql) === FALSE) {
+            echo "Error delete quote: " . $conn->error;
+        }
+    }
+
+    //exit;
 
     foreach ($json as $header_fields => $header_value) {
 
